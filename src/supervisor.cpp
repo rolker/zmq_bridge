@@ -1,41 +1,42 @@
-#include <zmq.hpp>
-#include "ros/ros.h"
+#include "zmq_bridge/zmq_bridge.h"
+#include "std_msgs/String.h"
 #include "geographic_msgs/GeoPointStamped.h"
-
-ros::Publisher pub;
-
 
 int main(int argc, char **argv)
 {
     zmq::context_t context(1);
     zmq::socket_t subscriber (context, ZMQ_SUB);
-    subscriber.connect("tcp://192.168.56.2:4200");
+    //subscriber.connect("tcp://192.168.56.2:4200");
+    subscriber.connect("tcp://localhost:4200");
     subscriber.setsockopt(ZMQ_SUBSCRIBE, nullptr, 0);
     
     ros::init(argc, argv, "zmq_bridge_supervisor");
     ros::NodeHandle n;
     
-    pub = n.advertise<geographic_msgs::GeoPointStamped>("/position",10);
+    zmq_bridge::PublisherMap pmap;
 
+    pmap[zmq_bridge::position].rpub = n.advertise<geographic_msgs::GeoPointStamped>("/zmq/position",10);
+    pmap[zmq_bridge::position].decoder = &zmq_bridge::Decode<geographic_msgs::GeoPointStamped>;
+
+    pmap[zmq_bridge::appcast].rpub = n.advertise<std_msgs::String>("/zmq/appcast",10);
+    pmap[zmq_bridge::appcast].decoder = &zmq_bridge::Decode<std_msgs::String>;
+    
     while(ros::ok())
     {
-        zmq::message_t update;
-        subscriber.recv(&update);
+        zmq::message_t channel_message;
+        subscriber.recv(&channel_message);
         
-        std::cerr << "data size: " << update.size() << std::endl;
+        std::cerr << "c size: " << channel_message.size() << std::endl;
+
+        zmq_bridge::Channel c = *static_cast<zmq_bridge::Channel*>(channel_message.data());
         
-        geographic_msgs::GeoPointStamped gps;
+        zmq::message_t data_message;
+        subscriber.recv(&data_message);
         
-        std::cerr << "serialization size: " <<  ros::serialization::serializationLength(gps) << std::endl;
+        std::cerr << "data size: " << data_message.size() << std::endl;
         
-        boost::shared_array<uint8_t> buffer(new uint8_t[update.size()]);
-        memcpy(buffer.get(),update.data(),update.size());
-        
-        ros::serialization::IStream stream(buffer.get(),update.size());
-        ros::serialization::Serializer<geographic_msgs::GeoPointStamped>::read(stream, gps);
-        
-        pub.publish(gps);
-        
+        if(pmap.find(c) != pmap.end())
+            pmap[c].decoder(data_message,pmap[c].rpub);
     }
     
     return 0;

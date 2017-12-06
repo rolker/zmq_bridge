@@ -31,6 +31,9 @@ int main(int argc, char **argv)
         ros::spinOnce();
     }
     
+    publisher->close();
+    
+    
     return 0;
 }
 

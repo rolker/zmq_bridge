@@ -22,9 +22,17 @@ int main(int argc, char **argv)
         zmq::message_t update;
         subscriber.recv(&update);
         
+        std::cerr << "data size: " << update.size() << std::endl;
+        
         geographic_msgs::GeoPointStamped gps;
-        ros::serialization::IStream stream(reinterpret_cast<uint8_t*>(update.data()),update.size());
-        ros::serialization::deserialize(stream,gps);
+        
+        std::cerr << "serialization size: " <<  ros::serialization::serializationLength(gps) << std::endl;
+        
+        boost::shared_array<uint8_t> buffer(new uint8_t[update.size()]);
+        memcpy(buffer.get(),update.data(),update.size());
+        
+        ros::serialization::IStream stream(buffer.get(),update.size());
+        ros::serialization::Serializer<geographic_msgs::GeoPointStamped>::read(stream, gps);
         
         pub.publish(gps);
         

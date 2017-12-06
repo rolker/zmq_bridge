@@ -11,7 +11,7 @@ void positionCallback(const geographic_msgs::GeoPointStamped::ConstPtr& inmsg)
     ros::serialization::OStream stream(buffer.get(), serial_size);
     ros::serialization::serialize(stream,*inmsg);
     zmq::message_t message(serial_size);
-    memcpy(message.data(),stream.getData(),serial_size);
+    memcpy(message.data(),buffer.get(),serial_size);
     publisher->send(message);
 }
 

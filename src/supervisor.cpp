@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     
     pub = n.advertise<geographic_msgs::GeoPointStamped>("/position",10);
 
-    while(true)
+    while(ros::ok())
     {
         zmq::message_t update;
         subscriber.recv(&update);

@@ -26,7 +26,10 @@ int main(int argc, char **argv)
     
     ros::Subscriber position_sub = n.subscribe("/position",10,positionCallback);
     
-    ros::spin();
+    while(ros::ok())
+    {
+        ros::spinOnce();
+    }
     
     return 0;
 }

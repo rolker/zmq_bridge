@@ -5,38 +5,21 @@
 int main(int argc, char **argv)
 {
     zmq::context_t context(1);
-    zmq::socket_t subscriber (context, ZMQ_SUB);
+    std::shared_ptr<zmq::socket_t>  subscriber(new zmq::socket_t(context, ZMQ_SUB));
     //subscriber.connect("tcp://192.168.56.2:4200");
-    subscriber.connect("tcp://localhost:4200");
-    subscriber.setsockopt(ZMQ_SUBSCRIBE, nullptr, 0);
+    subscriber->connect("tcp://localhost:4200");
+    subscriber->setsockopt(ZMQ_SUBSCRIBE, nullptr, 0);
     
     ros::init(argc, argv, "zmq_bridge_supervisor");
-    ros::NodeHandle n;
+    std::shared_ptr<ros::NodeHandle> n(new ros::NodeHandle);
     
-    zmq_bridge::PublisherMap pmap;
-
-    pmap[zmq_bridge::position].rpub = n.advertise<geographic_msgs::GeoPointStamped>("/zmq/position",10);
-    pmap[zmq_bridge::position].decoder = &zmq_bridge::Decode<geographic_msgs::GeoPointStamped>;
-
-    pmap[zmq_bridge::appcast].rpub = n.advertise<std_msgs::String>("/zmq/appcast",10);
-    pmap[zmq_bridge::appcast].decoder = &zmq_bridge::Decode<std_msgs::String>;
+    zmq_bridge::ZMQSubscriber zsub(subscriber, n);
+    zsub.addROSPublisher<geographic_msgs::GeoPointStamped>("/zmq/position",zmq_bridge::position);
+    zsub.addROSPublisher<std_msgs::String>("/zmq/appcast",zmq_bridge::appcast);
     
     while(ros::ok())
     {
-        zmq::message_t channel_message;
-        subscriber.recv(&channel_message);
-        
-        std::cerr << "c size: " << channel_message.size() << std::endl;
-
-        zmq_bridge::Channel c = *static_cast<zmq_bridge::Channel*>(channel_message.data());
-        
-        zmq::message_t data_message;
-        subscriber.recv(&data_message);
-        
-        std::cerr << "data size: " << data_message.size() << std::endl;
-        
-        if(pmap.find(c) != pmap.end())
-            pmap[c].decoder(data_message,pmap[c].rpub);
+        zsub.spinOnce();
     }
     
     return 0;

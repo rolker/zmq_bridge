@@ -2,21 +2,20 @@
 #include "std_msgs/String.h"
 #include "geographic_msgs/GeoPointStamped.h"
  
-std::shared_ptr<zmq::socket_t> publisher; 
 
 int main(int argc, char **argv)
 {
     zmq::context_t context(1);
-    publisher = std::shared_ptr<zmq::socket_t>(new zmq::socket_t(context, ZMQ_PUB));
+    std::shared_ptr<zmq::socket_t> publisher(new zmq::socket_t(context, ZMQ_PUB));
     publisher->bind("tcp://*:4200");
     
     ros::init(argc, argv, "zmg_bridge_agent");
-    ros::NodeHandle n;
+    std::shared_ptr<ros::NodeHandle> n(new ros::NodeHandle);
     
-    zmq_bridge::ZMQPublisher zpub(publisher);
+    zmq_bridge::ZMQPublisher zpub(publisher, n);
     
-    ros::Subscriber position_sub = n.subscribe("/position",10, &zmq_bridge::ZMQPublisher::ROSCallback<geographic_msgs::GeoPointStamped, zmq_bridge::position>, &zpub);
-    ros::Subscriber appcast_sub = n.subscribe("/moos/appcast",10,&zmq_bridge::ZMQPublisher::ROSCallback<std_msgs::String, zmq_bridge::appcast>, &zpub);
+    zpub.addROSSubscriber<geographic_msgs::GeoPointStamped, zmq_bridge::position>("/position");
+    zpub.addROSSubscriber<std_msgs::String, zmq_bridge::appcast>("/moos/appcast");
     
     while(ros::ok())
     {
@@ -24,7 +23,6 @@ int main(int argc, char **argv)
     }
     
     publisher->close();
-    
     
     return 0;
 }

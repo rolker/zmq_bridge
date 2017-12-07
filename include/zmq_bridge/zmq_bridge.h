@@ -11,7 +11,8 @@ namespace zmq_bridge
     enum Channel : uint32_t
     {
         position,
-        appcast
+        appcast,
+        active
     };
 
     class ZMQROSNode
@@ -79,19 +80,16 @@ namespace zmq_bridge
         void spinOnce()
         {
             zmq::message_t channel_message;
-            m_zmq_socket->recv(&channel_message);
-            
-            std::cerr << "c size: " << channel_message.size() << std::endl;
-
-            Channel c = *static_cast<Channel*>(channel_message.data());
-            
-            zmq::message_t data_message;
-            m_zmq_socket->recv(&data_message);
-            
-            std::cerr << "data size: " << data_message.size() << std::endl;
-            
-            if(m_ros_publishers.find(c) != m_ros_publishers.end())
-                m_ros_publishers[c].decoder(data_message,m_ros_publishers[c].rpub);
+            if(m_zmq_socket->recv(&channel_message,ZMQ_NOBLOCK))
+            {
+                Channel c = *static_cast<Channel*>(channel_message.data());
+                
+                zmq::message_t data_message;
+                m_zmq_socket->recv(&data_message);
+                
+                if(m_ros_publishers.find(c) != m_ros_publishers.end())
+                    m_ros_publishers[c].decoder(data_message,m_ros_publishers[c].rpub);
+            }
         }
         
         

@@ -22,6 +22,7 @@ int main(int argc, char **argv)
     
     zpub.addROSSubscriber<geographic_msgs::GeoPointStamped, zmq_bridge::position>("/position");
     zpub.addROSSubscriber<std_msgs::String, zmq_bridge::appcast>("/moos/appcast");
+    zpub.addROSSubscriber<geographic_msgs::GeoPoint,zmq_bridge::origin>("/moos/origin");
     
     zmq_bridge::ZMQSubscriber zsub(subscriber, n);
     

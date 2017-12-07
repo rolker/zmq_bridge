@@ -25,6 +25,7 @@ int main(int argc, char **argv)
     zmq_bridge::ZMQSubscriber zsub(subscriber, n);
     zsub.addROSPublisher<geographic_msgs::GeoPointStamped>("/zmq/position",zmq_bridge::position);
     zsub.addROSPublisher<std_msgs::String>("/zmq/appcast",zmq_bridge::appcast);
+    zsub.addROSPublisher<geographic_msgs::GeoPoint>("/zmq/origin",zmq_bridge::origin);
     
     zmq_bridge::ZMQPublisher zpub(publisher, n);
     zpub.addROSSubscriber<std_msgs::Bool, zmq_bridge::active>("zmq/active");

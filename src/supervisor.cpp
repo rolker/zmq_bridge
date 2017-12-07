@@ -17,6 +17,7 @@ int main(int argc, char **argv)
     subscriber->setsockopt(ZMQ_SUBSCRIBE, nullptr, 0);
     
     std::shared_ptr<zmq::socket_t> publisher(new zmq::socket_t(context, ZMQ_PUB));
+    publisher->setsockopt(ZMQ_SNDHWM, 20);
     publisher->connect("tcp://"+host+":4201");
     
     ros::init(argc, argv, "zmq_bridge_supervisor");

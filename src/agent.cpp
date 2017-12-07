@@ -9,6 +9,7 @@ int main(int argc, char **argv)
     zmq::context_t context(1);
 
     std::shared_ptr<zmq::socket_t> publisher(new zmq::socket_t(context, ZMQ_PUB));
+    publisher->setsockopt(ZMQ_SNDHWM, 20);
     publisher->bind("tcp://*:4200");
 
     std::shared_ptr<zmq::socket_t>  subscriber(new zmq::socket_t(context, ZMQ_SUB));

@@ -12,7 +12,8 @@ namespace zmq_bridge
     {
         position,
         appcast,
-        active
+        active,
+        wpt_updates
     };
 
     class ZMQROSNode

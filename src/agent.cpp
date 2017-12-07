@@ -26,6 +26,7 @@ int main(int argc, char **argv)
     zmq_bridge::ZMQSubscriber zsub(subscriber, n);
     
     zsub.addROSPublisher<std_msgs::Bool>("/active",zmq_bridge::active);
+    zsub.addROSPublisher<std_msgs::String>("/moos/wpt_updates",zmq_bridge::wpt_updates);
     
     while(ros::ok())
     {

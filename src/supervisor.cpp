@@ -5,15 +5,19 @@
 
 int main(int argc, char **argv)
 {
+    std::string host = "localhost";
+    if (argc > 1)
+        host = argv[1];
+        
     zmq::context_t context(1);
     
     std::shared_ptr<zmq::socket_t>  subscriber(new zmq::socket_t(context, ZMQ_SUB));
     //subscriber.connect("tcp://192.168.56.2:4200");
-    subscriber->connect("tcp://localhost:4200");
+    subscriber->connect("tcp://"+host+":4200");
     subscriber->setsockopt(ZMQ_SUBSCRIBE, nullptr, 0);
     
     std::shared_ptr<zmq::socket_t> publisher(new zmq::socket_t(context, ZMQ_PUB));
-    publisher->connect("tcp://localhost:4201");
+    publisher->connect("tcp://"+host+":4201");
     
     ros::init(argc, argv, "zmq_bridge_supervisor");
     std::shared_ptr<ros::NodeHandle> n(new ros::NodeHandle);
@@ -24,6 +28,7 @@ int main(int argc, char **argv)
     
     zmq_bridge::ZMQPublisher zpub(publisher, n);
     zpub.addROSSubscriber<std_msgs::Bool, zmq_bridge::active>("zmq/active");
+    zpub.addROSSubscriber<std_msgs::String, zmq_bridge::wpt_updates>("zmq/wpt_updates");
     
     while(ros::ok())
     {

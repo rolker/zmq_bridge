@@ -1,5 +1,6 @@
 <launch>
-    <node pkg="zmq_bridge" type="supervisor_node" name="zmq_supervisor"/>
+    <arg name="host" default="localhost"/>
+    <node pkg="zmq_bridge" type="supervisor_node" name="zmq_supervisor" args="$(arg host)"/>
 </launch>
 
 

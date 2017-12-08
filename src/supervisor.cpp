@@ -30,6 +30,7 @@ int main(int argc, char **argv)
     
     zmq_bridge::ZMQPublisher zpub(publisher, n);
     zpub.addROSSubscriber<std_msgs::Bool, zmq_bridge::active>("zmq/active");
+    zpub.addROSSubscriber<std_msgs::String, zmq_bridge::helm_mode>("zmq/helm_mode");
     zpub.addROSSubscriber<std_msgs::String, zmq_bridge::wpt_updates>("zmq/wpt_updates");
     
     while(ros::ok())

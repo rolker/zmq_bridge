@@ -14,7 +14,8 @@ namespace zmq_bridge
         appcast,
         active,
         wpt_updates,
-        origin
+        origin,
+	helm_mode
     };
 
     class ZMQROSNode

@@ -2,6 +2,7 @@
 #include "std_msgs/String.h"
 #include "std_msgs/Bool.h"
 #include "geographic_msgs/GeoPointStamped.h"
+#include "asv_msgs/VehicleStatus.h"
  
 
 int main(int argc, char **argv)
@@ -24,6 +25,7 @@ int main(int argc, char **argv)
     zpub.addROSSubscriber<geographic_msgs::GeoPointStamped, zmq_bridge::position>("/position");
     zpub.addROSSubscriber<std_msgs::String, zmq_bridge::appcast>("/moos/appcast");
     zpub.addROSSubscriber<geographic_msgs::GeoPoint,zmq_bridge::origin>("/moos/origin");
+    zpub.addROSSubscriber<asv_msgs::VehicleStatus,zmq_bridge::vehicle_status>("/vehicle_status");
     
     zmq_bridge::ZMQSubscriber zsub(subscriber, n);
     

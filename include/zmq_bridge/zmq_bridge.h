@@ -15,7 +15,8 @@ namespace zmq_bridge
         active,
         wpt_updates,
         origin,
-	helm_mode
+	helm_mode,
+        vehicle_status
     };
 
     class ZMQROSNode

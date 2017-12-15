@@ -32,6 +32,7 @@ int main(int argc, char **argv)
     zsub.addROSPublisher<std_msgs::Bool>("/active",zmq_bridge::active);
     zsub.addROSPublisher<std_msgs::String>("/helm_mode",zmq_bridge::helm_mode);
     zsub.addROSPublisher<std_msgs::String>("/moos/wpt_updates",zmq_bridge::wpt_updates);
+    zsub.addROSPublisher<std_msgs::String>("/moos/loiter_updates",zmq_bridge::loiter_updates);
     
     while(ros::ok())
     {

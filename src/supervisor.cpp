@@ -34,6 +34,7 @@ int main(int argc, char **argv)
     zpub.addROSSubscriber<std_msgs::Bool, zmq_bridge::active>("zmq/active");
     zpub.addROSSubscriber<std_msgs::String, zmq_bridge::helm_mode>("zmq/helm_mode");
     zpub.addROSSubscriber<std_msgs::String, zmq_bridge::wpt_updates>("zmq/wpt_updates");
+    zpub.addROSSubscriber<std_msgs::String, zmq_bridge::loiter_updates>("zmq/loiter_updates");
     
     while(ros::ok())
     {

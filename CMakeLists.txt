@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   mission_plan
   roscpp
   std_msgs
+  project11
 )
 
 ## System dependencies are found with CMake's conventions

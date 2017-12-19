@@ -5,6 +5,7 @@
 #include <functional>
 #include <zmq.hpp>
 #include "ros/ros.h"
+#include "project11/mutex_protected_bag_writer.h"
 
 namespace zmq_bridge
 {
@@ -28,9 +29,23 @@ namespace zmq_bridge
         {
         }
         
+        void openBag(std::string const &filename)
+        {
+            m_bag = std::shared_ptr<MutexProtectedBagWriter>(new MutexProtectedBagWriter);
+            m_bag->open(filename, rosbag::bagmode::Write);
+        }
+        
+        void closeBag()
+        {
+            m_bag->close();
+        }
+        
     protected:
         std::shared_ptr<zmq::socket_t> m_zmq_socket;
         std::shared_ptr<ros::NodeHandle> m_ros_node;
+        std::shared_ptr<MutexProtectedBagWriter> m_bag;
+        
+        static std::map<Channel,std::string> topic_map;
     };
     
     class ZMQPublisher: public ZMQROSNode
@@ -44,6 +59,7 @@ namespace zmq_bridge
         template<typename ROS_TYPE, Channel C> void addROSSubscriber(std::string const &topic)
         {
             m_ros_subscribers[C] = m_ros_node->subscribe(topic,10, &ZMQPublisher::ROSCallback<ROS_TYPE, C>, this);
+            topic_map[C] = topic;
         }
         
     private:
@@ -61,6 +77,9 @@ namespace zmq_bridge
             zmq::message_t message(serial_size);
             memcpy(message.data(),buffer.get(),serial_size);
             m_zmq_socket->send(message);
+            
+            if(m_bag)
+                m_bag->write(topic_map[C],ros::Time::now(),*inmsg);
         }
 
         typedef std::map<Channel,ros::Subscriber> SubscriberMap;
@@ -80,6 +99,7 @@ namespace zmq_bridge
         {
             m_ros_publishers[channel].rpub = m_ros_node->advertise<ROS_TYPE>(topic,10);
             m_ros_publishers[channel].decoder = &ZMQSubscriber::Decode<ROS_TYPE>;
+            topic_map[channel] = topic;
         }
         
         void spinOnce()
@@ -93,13 +113,13 @@ namespace zmq_bridge
                 m_zmq_socket->recv(&data_message);
                 
                 if(m_ros_publishers.find(c) != m_ros_publishers.end())
-                    m_ros_publishers[c].decoder(data_message,m_ros_publishers[c].rpub);
+                    m_ros_publishers[c].decoder(data_message,m_ros_publishers[c].rpub,m_bag,c);
             }
         }
         
         
     private:
-        template<typename ROS_TYPE> static void Decode(zmq::message_t &message, ros::Publisher &pub)
+        template<typename ROS_TYPE> static void Decode(zmq::message_t &message, ros::Publisher &pub, std::shared_ptr<MutexProtectedBagWriter> bag, Channel channel)
         {
             ROS_TYPE ros_msg;
             boost::shared_array<uint8_t> buffer(new uint8_t[message.size()]);
@@ -109,14 +129,15 @@ namespace zmq_bridge
             ros::serialization::Serializer<ROS_TYPE>::read(stream, ros_msg);
             
             pub.publish(ros_msg);
+            
+            if(bag)
+                bag->write(topic_map[channel],ros::Time::now(),ros_msg);
         }
-        
-        
         
         struct ROSPublisher
         {
             ros::Publisher rpub;
-            void (*decoder)(zmq::message_t &, ros::Publisher &);
+            void (*decoder)(zmq::message_t &, ros::Publisher &, std::shared_ptr<MutexProtectedBagWriter>, Channel);
         };
         
         typedef std::map<Channel,ROSPublisher> PublisherMap;

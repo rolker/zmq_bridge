@@ -6,6 +6,8 @@
 
 int main(int argc, char **argv)
 {
+    ros::init(argc, argv, "zmq_bridge_supervisor");
+
     std::string host = "localhost";
     if (argc > 1)
         host = argv[1];
@@ -21,7 +23,6 @@ int main(int argc, char **argv)
     publisher->setsockopt(ZMQ_SNDHWM, 20);
     publisher->connect("tcp://"+host+":4201");
     
-    ros::init(argc, argv, "zmq_bridge_supervisor");
     std::shared_ptr<ros::NodeHandle> n(new ros::NodeHandle);
     
     zmq_bridge::ZMQSubscriber zsub(subscriber, n);
